@@ -1,2 +1,4 @@
 (library
- (name projeto_ETL))
+ (name projeto_ETL)
+ (public_name projeto_ETL)
+ (modules csv_reader csv_writer types data_processor utils))

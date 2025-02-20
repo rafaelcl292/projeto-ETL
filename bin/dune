@@ -1,4 +1,3 @@
 (executable
- (public_name projeto_ETL)
  (name main)
  (libraries projeto_ETL))

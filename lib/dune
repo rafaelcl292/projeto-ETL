@@ -1,4 +1,5 @@
 (library
  (name projeto_ETL)
  (public_name projeto_ETL)
- (modules csv_reader csv_writer types data_processor utils))
+ (modules csv_reader csv_writer types data_processor utils)
+ (libraries sqlite3))

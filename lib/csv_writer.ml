@@ -15,16 +15,64 @@ let write_csv file_path data =
     data;
   close_out oc
 
-(** Salva os dados em um banco SQLite - a ser implementado.
+(** Salva os dados em um banco SQLite.
     @param db_file Caminho do arquivo de banco de dados SQLite.
     @param data
       Lista de listas de strings representando os dados a serem salvos.
     @return Unit (salva no banco sem retornar valor).
-    @raise Failure
-      "SQLite support not yet implemented" até que a funcionalidade seja
-      implementada. *)
+    @raise Failure se houver erro na interação com o banco de dados. *)
 let save_to_sqlite db_file data =
-  (* TODO: Implementar usando sqlite3 *)
-  ignore db_file;
-  ignore data;
-  failwith "SQLite support not yet implemented"
+  let open Sqlite3 in
+  (* Open database *)
+  let& db = db_open db_file in
+
+  try
+    (* Determine number of columns from first row, if data is not empty *)
+    let ncol = match data with [] -> 0 | row :: _ -> List.length row in
+
+    (* Create table with dynamic number of columns named col0, col1, etc. *)
+    let column_defs =
+      List.init ncol (fun i -> Printf.sprintf "col%d TEXT" i)
+      |> String.concat ", "
+    in
+    let create_sql =
+      Printf.sprintf "CREATE TABLE IF NOT EXISTS data (%s)" column_defs
+    in
+    let rc = exec db create_sql in
+    if not (Rc.is_success rc) then
+      failwith (Printf.sprintf "Failed to create table: %s" (errmsg db));
+
+    (* Prepare insert statement with placeholders *)
+    let placeholders = List.init ncol (fun _ -> "?") |> String.concat ", " in
+    let insert_sql =
+      Printf.sprintf "INSERT INTO data VALUES (%s)" placeholders
+    in
+    let stmt = prepare db insert_sql in
+
+    (* Insert each row *)
+    List.iter
+      (fun row ->
+        (* Reset statement for reuse *)
+        let _ = reset stmt in
+        (* Bind values - first parameter index is 1 *)
+        List.iteri
+          (fun i value ->
+            let rc = bind_text stmt (i + 1) value in
+            if not (Rc.is_success rc) then
+              failwith (Printf.sprintf "Failed to bind value: %s" (errmsg db)))
+          row;
+        (* Execute the insert *)
+        let rc = step stmt in
+        if not (Rc.is_success rc) then
+          failwith (Printf.sprintf "Failed to insert row: %s" (errmsg db)))
+      data;
+
+    (* Finalize statement *)
+    let rc = finalize stmt in
+    if not (Rc.is_success rc) then
+      failwith (Printf.sprintf "Failed to finalize statement: %s" (errmsg db))
+  with
+  | SqliteError msg -> failwith ("SQLite error: " ^ msg)
+  | exn ->
+      (* Ensure statement is finalized if it exists before re-raising *)
+      raise exn

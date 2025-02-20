@@ -10,7 +10,8 @@ homepage: "https://github.com/rafaelcl292/projeto-ETL"
 bug-reports: "https://github.com/rafaelcl292/projeto-ETL/issues"
 depends: [
   "dune" {>= "3.17"}
-  "ocaml" {>= "4.08"}
+  "ocaml" {>= "5.3"}
+  "sqlite3"
   "alcotest" {with-test}
   "odoc" {with-doc}
 ]

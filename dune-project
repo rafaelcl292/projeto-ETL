@@ -10,6 +10,7 @@
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends
-  (ocaml (>= 4.08))
+  (ocaml (>= 5.3))
+  sqlite3
   (alcotest :with-test))
  (tags ("ETL" "OCaml" "data processing")))

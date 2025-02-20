@@ -10,7 +10,7 @@ let () =
   let orders = List.map order_of_list orders_data in
   let items = List.map order_item_of_list items_data in
   let result = process_data orders items "Complete" "O" in
-  let csv_data =
+  let output_data =
     List.map
       (fun (id, amt, tax) ->
         [
@@ -18,4 +18,6 @@ let () =
         ])
       result
   in
-  write_csv "output.csv" csv_data
+
+  write_csv "output.csv" output_data;
+  save_to_sqlite "output.db" output_data

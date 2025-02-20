@@ -19,7 +19,7 @@ let () =
       let orders = List.map order_of_list orders_data in
       let items = List.map order_item_of_list items_data in
       let result = process_data orders items "Complete" "O" in
-      let csv_data =
+      let data =
         List.map
           (fun (id, amt, tax) ->
             [
@@ -31,8 +31,8 @@ let () =
       in
 
       (* Salva os resultados *)
-      write_csv "output.csv" csv_data;
-      save_to_sqlite "output.db" csv_data;
+      write_csv "output.csv" data;
+      save_to_sqlite "output.db" "output" data;
 
       (* Calcula e salva médias por mês/ano *)
       let grouped = group_by_month_year orders result in
@@ -46,6 +46,6 @@ let () =
           averages
       in
       write_csv "averages.csv" avg_data;
-      save_to_sqlite "averages.db" avg_data;
+      save_to_sqlite "output.db" "averages" avg_data;
 
       Lwt.return_unit )

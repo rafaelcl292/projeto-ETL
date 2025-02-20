@@ -17,11 +17,12 @@ let write_csv file_path data =
 
 (** Salva os dados em um banco SQLite.
     @param db_file Caminho do arquivo de banco de dados SQLite.
+    @param table_name Nome da tabela onde os dados serão salvos.
     @param data
       Lista de listas de strings representando os dados a serem salvos.
     @return Unit (salva no banco sem retornar valor).
     @raise Failure se houver erro na interação com o banco de dados. *)
-let save_to_sqlite db_file data =
+let save_to_sqlite db_file table_name data =
   let open Sqlite3 in
   (* Open database *)
   let& db = db_open db_file in
@@ -36,16 +37,17 @@ let save_to_sqlite db_file data =
       |> String.concat ", "
     in
     let create_sql =
-      Printf.sprintf "CREATE TABLE IF NOT EXISTS data (%s)" column_defs
+      Printf.sprintf "CREATE TABLE IF NOT EXISTS %s (%s)" table_name column_defs
     in
     let rc = exec db create_sql in
     if not (Rc.is_success rc) then
-      failwith (Printf.sprintf "Failed to create table: %s" (errmsg db));
+      failwith
+        (Printf.sprintf "Failed to create table %s: %s" table_name (errmsg db));
 
     (* Prepare insert statement with placeholders *)
     let placeholders = List.init ncol (fun _ -> "?") |> String.concat ", " in
     let insert_sql =
-      Printf.sprintf "INSERT INTO data VALUES (%s)" placeholders
+      Printf.sprintf "INSERT INTO %s VALUES (%s)" table_name placeholders
     in
     let stmt = prepare db insert_sql in
 
@@ -64,7 +66,9 @@ let save_to_sqlite db_file data =
         (* Execute the insert *)
         let rc = step stmt in
         if not (Rc.is_success rc) then
-          failwith (Printf.sprintf "Failed to insert row: %s" (errmsg db)))
+          failwith
+            (Printf.sprintf "Failed to insert row into %s: %s" table_name
+               (errmsg db)))
       data;
 
     (* Finalize statement *)

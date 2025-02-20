@@ -1,6 +1,7 @@
 open Projeto_ETL.Csv_reader
 open Projeto_ETL.Csv_writer
 open Projeto_ETL.Data_processor
+open Projeto_ETL.Utils
 
 let () =
   let orders_data = read_csv "order.csv" in
@@ -20,4 +21,17 @@ let () =
   in
 
   write_csv "output.csv" output_data;
-  save_to_sqlite "output.db" output_data
+  save_to_sqlite "output.db" output_data;
+
+  (* Calcular e salvar médias por mês/ano *)
+  let grouped = group_by_month_year orders result in
+  let averages = calculate_averages grouped in
+  let avg_data =
+    List.map
+      (fun (key, avg_amt, avg_tax) ->
+        [ key; Printf.sprintf "%.2f" avg_amt; Printf.sprintf "%.2f" avg_tax ])
+      averages
+  in
+
+  write_csv "averages.csv" avg_data;
+  save_to_sqlite "averages.db" avg_data

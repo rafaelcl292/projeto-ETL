@@ -12,5 +12,6 @@
  (depends
   (ocaml (>= 5.3))
   sqlite3
+  cohttp-lwt-unix
   (alcotest :with-test))
  (tags ("ETL" "OCaml" "data processing")))
